@@ -15,6 +15,9 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         return self.connection_pool.connection
 
     def AddItem(self, request, context):
+        print('AddItem:')
+        print(request)
+
         connection = self.get_connection()
         cursor = connection.cursor()
         #item_id = request.id
@@ -33,17 +36,44 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             cursor.execute(insert_query, (request.description,))
             connection.commit()
 
-            response = similarity_pb2.AddItemResponse(description)
-            response.status = 200
-            response.message = 'Item added successfully'
-            print('Response:', response)
+            add_item_response = similarity_pb2.AddItemResponse()
+            add_item_response.status = 200
+            add_item_response.message = 'Item added successfully'
+            #print('Response:', response)
 
 
-            return response
+            return add_item_response
         except sqlite3.Error as e:
             error_response = similarity_pb2.AddItemResponse()
             error_response.status = 500
             error_response.message = 'Error adding item to the database: {}'.format(str(e))
+
+            return error_response
+
+    def SearchItems(self, request, context):
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        query = request.query
+
+        try:
+            # Execute the search query
+            search_query = "SELECT id, description FROM items WHERE description LIKE ?"
+            cursor.execute(search_query, ('%' + query + '%',))
+            search_results = cursor.fetchall()
+
+            # Create the SearchItemsResponse message
+            response = similarity_pb2.SearchItemsResponse()
+            for result in search_results:
+                search_result = response.results.add()
+                search_result.id = result[0]
+                search_result.description = result[1]
+
+            return response
+        except sqlite3.Error as e:
+            error_response = similarity_pb2.SearchItemsResponse()
+            # Set the error status and message
+            error_response.status = 500
+            error_response.message = 'Error searching items in the database: {}'.format(str(e))
 
             return error_response
 

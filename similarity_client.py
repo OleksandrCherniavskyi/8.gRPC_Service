@@ -3,20 +3,41 @@ import similarity_pb2
 import similarity_pb2_grpc
 
 def run():
-    channel = grpc.insecure_channel('localhost:50051')
-    stub = similarity_pb2_grpc.SimilaritySearchServiceStub(channel)
+    with grpc.insecure_channel('localhost:50051') as channel:
+        stub = similarity_pb2_grpc.SimilaritySearchServiceStub(channel)
 
-    # Create an AddItemRequest
-    request = similarity_pb2.AddItemRequest()
+        print("1. Add item")
+        print("2. Searching items")
+        print("3. Retrieving the search results")
+        rpc_call = input("Which RPC would you like to make: ")
 
-    request.description = input("Please enter description: ")
 
-    # Call the AddItem RPC
+        if rpc_call == "1":
+            # Create an AddItemRequest
+            description = input("Please enter description: ")
+            add_item_request = similarity_pb2.AddItemRequest(description = description)
 
-    response = stub.AddItem(request)
+            # Call the AddItem RPC
+            add_item_response = stub.AddItem(add_item_request)
 
-    print('AddItem response:', response.message)
+            print('AddItem response:')
+            print(add_item_response.message)
 
+
+        elif rpc_call == "2":
+            # Create a SearchItemsRequest
+            search_items_request = similarity_pb2.SearchItemsRequest()
+            search_items_request.query = input("Please enter search query: ")
+
+            # Call the SearchItems RPC
+            search_items_response = stub.SearchItems(search_items_request)
+            print('SearchItems response:')
+            for result in search_items_response.results:
+                print('ID:', result.id)
+                print('Description:', result.description)
+
+        else:
+            print("Invalid RPC option")
 
 if __name__ == '__main__':
     run()

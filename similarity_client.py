@@ -31,14 +31,27 @@ def run():
 
             # Call the SearchItems RPC
             search_items_response = stub.SearchItems(search_items_request)
+
+
             print('SearchItems response:')
-            for result in search_items_response.results:
-                print('ID:', result.id)
-                print('Description:', result.description)
+            print(search_items_response.search_id)
+
+        elif rpc_call == "3":
+            # Create a GetSearchResultsRequest
+            get_search_results_request = similarity_pb2.GetSearchResultsRequest()
+            get_search_results_request.search_id = input("Please enter search ID: ")
+
+            # Call the GetSearchResults RPC
+            get_search_results_response = stub.GetSearchResults(get_search_results_request)
+            print('GetSearchResults response:')
+            #print(get_search_results_response.SearchResult)
+            for search_result in get_search_results_response.results:
+                print('Description:', search_result.description)
+
+
 
         else:
             print("Invalid RPC option")
-
 if __name__ == '__main__':
     run()
 

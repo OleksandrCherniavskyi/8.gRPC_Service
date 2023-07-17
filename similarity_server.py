@@ -38,8 +38,8 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
 
             add_item_response = similarity_pb2.AddItemResponse()
             add_item_response.status = 200
-            add_item_response.message = 'Item added successfully'
-            #print('Response:', response)
+            add_item_response.message = f'Item added successfully {request.description}'
+
 
 
             return add_item_response
@@ -54,6 +54,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         connection = self.get_connection()
         cursor = connection.cursor()
         query = request.query
+        print('SearchItems:')
 
         try:
             # Execute the search query
@@ -62,18 +63,57 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             search_results = cursor.fetchall()
 
             # Create the SearchItemsResponse message
-            response = similarity_pb2.SearchItemsResponse()
-            for result in search_results:
-                search_result = response.results.add()
-                search_result.id = result[0]
-                search_result.description = result[1]
+            search_items_response = similarity_pb2.SearchItemsResponse()
 
-            return response
+            rows = []
+            for row in search_results:
+
+                item_id = row[0]
+
+                rows.append(item_id)
+
+
+
+            search_items_response.search_id = f'ID: {rows}'
+
+
+            return search_items_response
         except sqlite3.Error as e:
             error_response = similarity_pb2.SearchItemsResponse()
             # Set the error status and message
             error_response.status = 500
             error_response.message = 'Error searching items in the database: {}'.format(str(e))
+
+            return error_response
+
+    def GetSearchResults(self, request, context):
+        connection = self.get_connection()
+        cursor = connection.cursor()
+        search_id = request.search_id
+        print('GetSearchResults:')
+        print(search_id)
+
+        try:
+            # Execute the search query
+            search_query = "SELECT id, description FROM items WHERE id = ?"
+            cursor.execute(search_query, (search_id,))
+
+            search_results = cursor.fetchall()
+
+            # Create the GetSearchResultsResponse message
+            get_search_results_response = similarity_pb2.GetSearchResultsResponse()
+
+            for search_result in get_search_results_response.results:
+                print('Description:', search_result.description)
+                get_search_results_response.SearchResult = f'Description: {search_result.description}'
+
+
+
+            return get_search_results_response
+        except sqlite3.Error as e:
+            error_response = similarity_pb2.GetSearchResultsResponse()
+            error_response.status = 500
+            error_response.message = 'Error retrieving search results from the database: {}'.format(str(e))
 
             return error_response
 

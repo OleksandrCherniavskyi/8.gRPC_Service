@@ -15,13 +15,13 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         return self.connection_pool.connection
 
     def AddItem(self, request, context):
-        print('AddItem:')
-        print(request)
+
 
         connection = self.get_connection()
         cursor = connection.cursor()
-        #item_id = request.id
+
         description = request.description
+        print(f'AddItem:{description}')
 
         try:
 
@@ -38,7 +38,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
 
             add_item_response = similarity_pb2.AddItemResponse()
             add_item_response.status = 200
-            add_item_response.message = f'Item added successfully {request.description}'
+            add_item_response.message = f'\nItem added successfully: {request.description}'
 
 
 
@@ -56,66 +56,44 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         query = request.query
         print('SearchItems:')
 
-        try:
-            # Execute the search query
-            search_query = "SELECT id, description FROM items WHERE description LIKE ?"
-            cursor.execute(search_query, ('%' + query + '%',))
-            search_results = cursor.fetchall()
 
-            # Create the SearchItemsResponse message
-            search_items_response = similarity_pb2.SearchItemsResponse()
+        # Execute the search query
+        search_query = "SELECT id, description FROM items WHERE description LIKE ?"
+        cursor.execute(search_query, ('%' + query + '%',))
+        search_results = cursor.fetchall()
+        # Create the SearchItemsResponse message
+        search_items_response = similarity_pb2.SearchItemsResponse()
+        rows = []
+        for row in search_results:
+            item_id = row[0]
+            rows.append(item_id)
+        search_items_response.search_id = f'ID: {rows}'
+        return search_items_response
 
-            rows = []
-            for row in search_results:
-
-                item_id = row[0]
-
-                rows.append(item_id)
-
-
-
-            search_items_response.search_id = f'ID: {rows}'
-
-
-            return search_items_response
-        except sqlite3.Error as e:
-            error_response = similarity_pb2.SearchItemsResponse()
-            # Set the error status and message
-            error_response.status = 500
-            error_response.message = 'Error searching items in the database: {}'.format(str(e))
-
-            return error_response
 
     def GetSearchResults(self, request, context):
         connection = self.get_connection()
         cursor = connection.cursor()
         search_id = request.search_id
-        print('GetSearchResults:')
-        print(search_id)
-
-        try:
-            # Execute the search query
-            search_query = "SELECT id, description FROM items WHERE id = ?"
-            cursor.execute(search_query, (search_id,))
-
-            search_results = cursor.fetchall()
-
-            # Create the GetSearchResultsResponse message
-            get_search_results_response = similarity_pb2.GetSearchResultsResponse()
-
-            for search_result in get_search_results_response.results:
-                print('Description:', search_result.description)
-                get_search_results_response.SearchResult = f'Description: {search_result.description}'
+        print(f'GetSearchResults, ID: {search_id}')
 
 
+        # Execute the search query
+        search_query = "SELECT id, description FROM items WHERE id = ?"
+        cursor.execute(search_query, (search_id,))
+        search_results = cursor.fetchall()
 
-            return get_search_results_response
-        except sqlite3.Error as e:
-            error_response = similarity_pb2.GetSearchResultsResponse()
-            error_response.status = 500
-            error_response.message = 'Error retrieving search results from the database: {}'.format(str(e))
+        # Convert search results to gRPC message format
+        get_search_results_response = similarity_pb2.GetSearchResultsResponse()
+        for result in search_results:
+            search_result = get_search_results_response.results.add()
+            search_result.id = str(result[0])
+            search_result.description = result[1]
 
-            return error_response
+        return get_search_results_response
+
+
+
 
 def serve():
     port = "50051"

@@ -20,6 +20,8 @@ def run():
             elif rpc_call == "1":
                 # Create an AddItemRequest
                 description = input("\nPlease enter description: \n")
+                if description == "":
+                    break
                 add_item_request = similarity_pb2.AddItemRequest(description = description)
 
                 # Call the AddItem RPC
@@ -34,6 +36,8 @@ def run():
                 # Create a SearchItemsRequest
                 search_items_request = similarity_pb2.SearchItemsRequest()
                 search_items_request.query = input("\nPlease enter search query: \n")
+                if search_items_request.query == "":
+                    break
 
                 # Call the SearchItems RPC
                 search_items_response = stub.SearchItems(search_items_request)
@@ -47,7 +51,8 @@ def run():
                 # Create a GetSearchResultsRequest
                 get_search_results_request = similarity_pb2.GetSearchResultsRequest()
                 get_search_results_request.search_id = input("\nPlease enter search ID: \n")
-
+                if get_search_results_request.search_id == "":
+                    break
                 # Call the GetSearchResults RPC
                 get_search_results_response = stub.GetSearchResults(get_search_results_request)
 

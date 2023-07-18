@@ -28,7 +28,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             # Create the "items" table if it doesn't exist
             create_db_query = '''CREATE TABLE IF NOT EXISTS items (
                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                   description VARCHAR)'''
+                                   description VARCHAR(300))'''
             cursor.execute(create_db_query)
             connection.commit()
 

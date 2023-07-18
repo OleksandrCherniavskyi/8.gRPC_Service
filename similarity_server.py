@@ -118,84 +118,14 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             return error_response
 
 def serve():
+    port = "50051"
     server = grpc.server(futures.ThreadPoolExecutor())
     similarity_pb2_grpc.add_SimilaritySearchServiceServicer_to_server(SimilaritySearchService(), server)
-    server.add_insecure_port('[::]:50051')
+    server.add_insecure_port("[::]:" + port)
     server.start()
-    print("Server started, listening on 50051 ")
+    print("Server started, listening on " + port)
     server.wait_for_termination()
 
 if __name__ == '__main__':
     serve()
 
-
-#import sqlite3
-#from concurrent import futures
-#import grpc
-#from sqlalchemy import create_engine, Column, String, Integer
-#import similarity_pb2
-#import similarity_pb2_grpc
-#import psycopg2
-#import time
-#
-#
-#engine = create_engine('sqlite:///similarity.sqlite3', echo=True)
-#
-#class SimilaritySearchServicer(similarity_pb2_grpc.SimilaritySearchServiceServicer):
-#    def __init__(self):
-#        self.conn = sqlite3.connect('similarity.sqlite3')
-#        self.cursor = self.conn.cursor()
-#
-#        # Create the "items" table if it doesn't exist
-#        self.create_db_query = '''CREATE TABLE IF NOT EXISTS items (
-#                                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-#                                    description VARCHAR)'''
-#        self.cursor.execute(self.create_db_query)
-#        self.conn.commit()
-#
-#    def AddItem(self, request, context):
-#        response = similarity_pb2.AddItemResponse()
-#
-#        # Insert the item into the "items" table
-#        insert_query = "INSERT INTO items (description) VALUES (?)"
-#        self.cursor.execute(insert_query, (request.description,))
-#        self.conn.commit()
-#
-#        response.status = 200
-#        response.message = "Item added successfully"
-#
-#        return response
-#
-##    def SearchItems(self, request, context):
-##        response = similarity_pb2.SearchItemsResponse()
-##        # Implement the logic to search items
-##        for i in range(3):
-##
-##            response.search_id = f"12345{i + 1}"
-##            yield response
-##            time.sleep(1)
-##
-##
-##    def GetSearchResults(self, request, context):
-##        response = similarity_pb2.GetSearchResultsResponse()
-##        # Implement the logic to get search results
-##        result1 = response.results.add()
-##        result1.id = "1"
-##        result1.description = "Sample result 1"
-##        result2 = response.results.add()
-##        result2.id = "2"
-##        result2.description = "Sample result 2"
-##        return response
-#
-#def run_server():
-#    port = "50051"
-#    server = grpc.server(futures.ThreadPoolExecutor(max_workers=10))
-#    similarity_pb2_grpc.add_SimilaritySearchServiceServicer_to_server(SimilaritySearchServicer(), server)
-#    server.add_insecure_port("[::]:" + port)
-#    server.start()
-#    print("Server started, listening on " + port)
-#    server.wait_for_termination()
-#
-#if __name__ == "__main__":
-#    run_server()
-#

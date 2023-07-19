@@ -19,7 +19,7 @@ def run():
                 break
             elif rpc_call == "1":
                 # Create an AddItemRequest
-                description = input("\nPlease enter description: \n")
+                description = input("Please enter description: ")
                 if description == "":
                     break
                 add_item_request = similarity_pb2.AddItemRequest(description = description)

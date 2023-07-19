@@ -1,21 +1,29 @@
 version: "3.8"
-
 services:
-  similarity_server:
+  app :
     build:
-      context: .
-      dockerfile: Dockerfile
-    ports:
-      - "8000:8000"  # Change the port numbers if needed
-    volumes:
-      - .:/app       # Mount the current directory to the /app directory in the container
-    command: python similarity_server.py
-
-  similarity_client:
-    build:
-      context: .
-      dockerfile: Dockerfile  # Use the same Dockerfile as the server
-    volumes:
-      - .:/app              # Mount the current directory to the /app directory in the container
-    command: python similarity_client.py
+          context: .
+          dockerfile: Dockerfile
+  db:
+    build: ./database/
+#version: "3.8"
+#
+#services:
+#  similarity_server:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    ports:
+#      - "8000:8000"  # Change the port numbers if needed
+#    volumes:
+#      - .:/app       # Mount the current directory to the /app directory in the container
+#    command: python similarity_server.py
+#
+#  similarity_client:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile  # Use the same Dockerfile as the server
+#    volumes:
+#      - .:/app              # Mount the current directory to the /app directory in the container
+#    command: python similarity_client.py
 

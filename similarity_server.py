@@ -188,7 +188,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
 
         # POSTREG
         cursor = self.conn.cursor()
-        search_query = "SELECT id, description FROM items WHERE id = 1"
+        search_query = "SELECT id, description FROM items WHERE id = %s"
         cursor.execute(search_query, (search_id,))
         search_results = cursor.fetchall()
         cursor.close()

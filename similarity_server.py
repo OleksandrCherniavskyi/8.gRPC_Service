@@ -8,33 +8,33 @@ import threading
 from concurrent import futures
 from sqlalchemy import create_engine
 
-## POSTREG
-#db_name = 'database'
-#db_user = 'username'
-#db_pass = 'secret'
-#db_host = 'db'
-#db_port = '5432'
+# POSTREG
+db_name = 'database'
+db_user = 'username'
+db_pass = 'secret'
+db_host = 'db'
+db_port = '5432'
 
 
 class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceServicer):
     def __init__(self):
         self.connection_pool = threading.local()
 
-        ## POSTREG
-        ## Create the database connection
-        #self.conn = psycopg2.connect(
-        #    dbname=db_name,
-        #    user=db_user,
-        #    password=db_pass,
-        #    host=db_host,
-        #    port=db_port
-        #)
+        # POSTREG
+        # Create the database connection
+        self.conn = psycopg2.connect(
+            dbname=db_name,
+            user=db_user,
+            password=db_pass,
+            host=db_host,
+            port=db_port
+        )
 
-        # SQLite
-    def get_connection(self):
-        if not hasattr(self.connection_pool, 'connection'):
-            self.connection_pool.connection = sqlite3.connect('similarity.sqlite3')
-        return self.connection_pool.connection
+    #    # SQLite
+    #def get_connection(self):
+    #    if not hasattr(self.connection_pool, 'connection'):
+    #        self.connection_pool.connection = sqlite3.connect('similarity.sqlite3')
+    #    return self.connection_pool.connection
 
 
 
@@ -45,81 +45,78 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
 
         try:
             # SQLite
-            connection = self.get_connection()
-            cursor = connection.cursor()
-            # Create the "items" table if it doesn't exist
-            create_db_query = '''CREATE TABLE IF NOT EXISTS items (
-                                   id INTEGER PRIMARY KEY AUTOINCREMENT,
-                                   description VARCHAR(300))'''
-            cursor.execute(create_db_query)
-            connection.commit()
-
-            insert_query = "INSERT INTO items (description) VALUES (?)"
-            cursor.execute(insert_query, (request.description,))
-            connection.commit()
-            item = request.description
-            len_item = len(item)
-            print(f'Len searching item: {len_item}')
-
-            all_items_query = "SELECT id, description FROM items"
-            cursor.execute(all_items_query)
-            all_result = cursor.fetchall()
-            len_all_result = len(all_result)
-            print(f"All resultats: {len_all_result}")
-
-            k = []
-            for i in range(len_item):
-                if i == 0:
-                    part_result = item
-                else:
-                    part_result = item[:-i]
-
-                search_item_in_all_result = sum(1 for it in all_result if part_result in it)
-                koefficient = search_item_in_all_result / len_all_result
-                k.append(koefficient)
-
-            sum_k = sum(k)
-            similarity = (sum_k / len_item)
-            print(similarity)
-            connection.close()
-
-
-
-            ## POSTREG
-            #cursor = self.conn.cursor()
-            #create_table_query = '''
-            #CREATE TABLE IF NOT EXISTS items (
-            #    id SERIAL PRIMARY KEY,
-            #    description VARCHAR(300)
-            #);
-            #'''
-            #cursor.execute(create_table_query)
-            #self.conn.commit()
-            #cursor.execute("INSERT INTO items (description) VALUES (%s);", (request.description,))
-            #self.conn.commit()
+            #connection = self.get_connection()
+            #cursor = connection.cursor()
+            ## Create the "items" table if it doesn't exist
+            #create_db_query = '''CREATE TABLE IF NOT EXISTS items (
+            #                       id INTEGER PRIMARY KEY AUTOINCREMENT,
+            #                       description VARCHAR(300))'''
+            #cursor.execute(create_db_query)
+            #connection.commit()
+#
+            #insert_query = "INSERT INTO items (description) VALUES (?)"
+            #cursor.execute(insert_query, (request.description,))
+            #connection.commit()
             #item = request.description
             #len_item = len(item)
-
+            #print(f'Len searching item: {len_item}')
+#
             #all_items_query = "SELECT id, description FROM items"
             #cursor.execute(all_items_query)
             #all_result = cursor.fetchall()
             #len_all_result = len(all_result)
             #print(f"All resultats: {len_all_result}")
+#
             #k = []
             #for i in range(len_item):
             #    if i == 0:
             #        part_result = item
             #    else:
             #        part_result = item[:-i]
-
+#
             #    search_item_in_all_result = sum(1 for it in all_result if part_result in it)
             #    koefficient = search_item_in_all_result / len_all_result
             #    k.append(koefficient)
-
+#
             #sum_k = sum(k)
             #similarity = (sum_k / len_item)
             #print(similarity)
-            #cursor.close()
+            #connection.close()
+
+
+
+            # POSTREG
+            cursor = self.conn.cursor()
+            create_table_query = '''
+            CREATE TABLE IF NOT EXISTS items (
+                id SERIAL PRIMARY KEY,
+                description VARCHAR(300)
+            );
+            '''
+            cursor.execute(create_table_query)
+            self.conn.commit()
+            cursor.execute("INSERT INTO items (description) VALUES (%s);", (request.description,))
+            self.conn.commit()
+            item = request.description
+            len_item = len(item)
+            all_items_query = "SELECT id, description FROM items"
+            cursor.execute(all_items_query)
+            all_result = cursor.fetchall()
+            len_all_result = len(all_result)
+            print(f"All resultats: {len_all_result}")
+            k = []
+            for i in range(len_item):
+                if i == 0:
+                    part_result = item
+                else:
+                    part_result = item[:-i]
+                search_item_in_all_result = sum(1 for it in all_result if part_result in it)
+                koefficient = search_item_in_all_result / len_all_result
+                k.append(koefficient)
+            sum_k = sum(k)
+            similarity = (sum_k / len_item)
+            print(similarity)
+            cursor.close()
 
 
             add_item_response = similarity_pb2.AddItemResponse()
@@ -140,32 +137,32 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         query = request.query
         print('SearchItems:')
         # SQLite
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        # Execute the search query
-        search_query = "SELECT id, description FROM items WHERE description LIKE ?"
-        cursor.execute(search_query, ('%' + query + '%',))
-        search_results = cursor.fetchall()
-
-        all_items_query = "SELECT id, description FROM items"
-        cursor.execute(all_items_query)
-        all_result = cursor.fetchall()
-        #print(search_results)
-
-        result_count = len(search_results)
-        result_all = len(all_result)
-        similarity = (result_count/result_all) * 100
-        similarity = "{:.2f}".format(similarity)
-        print(f'Similarity searching item is: {similarity} %')
-
-
-        ## POSTREG
-        #cursor = self.conn.cursor()
-        #search_query = "SELECT id, description FROM items WHERE description LIKE %s"
-        ## Execute the query with the parameter
+        #connection = self.get_connection()
+        #cursor = connection.cursor()
+        ## Execute the search query
+        #search_query = "SELECT id, description FROM items WHERE description LIKE ?"
         #cursor.execute(search_query, ('%' + query + '%',))
         #search_results = cursor.fetchall()
-        #cursor.close()
+#
+        #all_items_query = "SELECT id, description FROM items"
+        #cursor.execute(all_items_query)
+        #all_result = cursor.fetchall()
+        ##print(search_results)
+#
+        #result_count = len(search_results)
+        #result_all = len(all_result)
+        #similarity = (result_count/result_all) * 100
+        #similarity = "{:.2f}".format(similarity)
+        #print(f'Similarity searching item is: {similarity} %')
+
+
+        # POSTREG
+        cursor = self.conn.cursor()
+        search_query = "SELECT id, description FROM items WHERE description LIKE %s"
+        # Execute the query with the parameter
+        cursor.execute(search_query, ('%' + query + '%',))
+        search_results = cursor.fetchall()
+        cursor.close()
 
         # Create the SearchItemsResponse message
         search_items_response = similarity_pb2.SearchItemsResponse()
@@ -181,20 +178,20 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
         search_id = request.search_id
         print(f'GetSearchResults, ID: {search_id}')
 
-        # SQLite
-        connection = self.get_connection()
-        cursor = connection.cursor()
-        # Execute the search query
-        search_query = "SELECT id, description FROM items WHERE id = ?"
-        cursor.execute(search_query, (search_id,))
-        search_results = cursor.fetchall()
-
-        ## POSTREG
-        #cursor = self.conn.cursor()
-        #search_query = "SELECT id, description FROM items WHERE id = 1"
+        ## SQLite
+        #connection = self.get_connection()
+        #cursor = connection.cursor()
+        ## Execute the search query
+        #search_query = "SELECT id, description FROM items WHERE id = ?"
         #cursor.execute(search_query, (search_id,))
         #search_results = cursor.fetchall()
-        #cursor.close()
+
+        # POSTREG
+        cursor = self.conn.cursor()
+        search_query = "SELECT id, description FROM items WHERE id = 1"
+        cursor.execute(search_query, (search_id,))
+        search_results = cursor.fetchall()
+        cursor.close()
 
         # Convert search results to gRPC message format
         get_search_results_response = similarity_pb2.GetSearchResultsResponse()

@@ -1,3 +1,18 @@
+
+## Description 
+This project is a service that allows you to add items to a database and search for similar items. 
+
+### The main features of the service
+- Add Item 
+- Search Items
+- Get Search Results
+- When you add a new item to the database, you can see the coefficient of how similar it is to other items in the database.
+
+The service is based on gRPC and is developed in Python. 
+The database used is PostgreSQL because it is a good scalable database.
+
+
+
 # To run project with Docker Desktop
 
 - Clone repository

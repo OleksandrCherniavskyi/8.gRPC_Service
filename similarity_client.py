@@ -1,15 +1,13 @@
 import grpc
 import similarity_pb2
 import similarity_pb2_grpc
-import time
-
 
 
 def run():
+    # Create a loop to choose Call
     while True:
         with grpc.insecure_channel('localhost:50051') as channel:
             stub = similarity_pb2_grpc.SimilaritySearchServiceStub(channel)
-
             print("1. Add item")
             print("2. Searching items")
             print("3. Retrieving the search results\n")
@@ -22,15 +20,12 @@ def run():
                 description = input("Please enter description: ")
                 if description == "":
                     break
-                add_item_request = similarity_pb2.AddItemRequest(description = description)
+                add_item_request = similarity_pb2.AddItemRequest(description=description)
 
                 # Call the AddItem RPC
                 add_item_response = stub.AddItem(add_item_request)
-
                 print(add_item_response.message)
                 print(f'Status: {add_item_response.status}\n')
-
-
 
             elif rpc_call == "2":
                 # Create a SearchItemsRequest
@@ -41,11 +36,7 @@ def run():
 
                 # Call the SearchItems RPC
                 search_items_response = stub.SearchItems(search_items_request)
-
-
                 print(f'\nSearchItems response: {search_items_response.search_id}\n')
-
-
 
             elif rpc_call == "3":
                 # Create a GetSearchResultsRequest
@@ -58,14 +49,6 @@ def run():
 
                 for result in get_search_results_response.results:
                     print(f"\nSearch Result ID: {result.id}, Description: {result.description}\n")
-
-
-
-
-
-
-
-
 
 if __name__ == '__main__':
     run()

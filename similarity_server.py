@@ -1,6 +1,5 @@
 import grpc
 import psycopg2
-
 import similarity_pb2
 import similarity_pb2_grpc
 import sqlite3
@@ -8,20 +7,18 @@ import threading
 from concurrent import futures
 from sqlalchemy import create_engine
 
-# POSTREG
+# POSTREG SETTING
 db_name = 'database'
 db_user = 'username'
 db_pass = 'secret'
 db_host = 'db'
 db_port = '5432'
 
-
 class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceServicer):
+    # Create the database connection
     def __init__(self):
         self.connection_pool = threading.local()
-
         # POSTREG
-        # Create the database connection
         self.conn = psycopg2.connect(
             dbname=db_name,
             user=db_user,
@@ -35,10 +32,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
     #    if not hasattr(self.connection_pool, 'connection'):
     #        self.connection_pool.connection = sqlite3.connect('similarity.sqlite3')
     #    return self.connection_pool.connection
-
-
-
-
+    # Create add item function
     def AddItem(self, request, context):
         description = request.description
         print(f'AddItem:{description}')
@@ -95,6 +89,8 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             '''
             cursor.execute(create_table_query)
             self.conn.commit()
+
+            # Create coefficient how similarity add item for another item in database
             cursor.execute("INSERT INTO items (description) VALUES (%s);", (request.description,))
             self.conn.commit()
             item = request.description
@@ -118,22 +114,19 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             print(similarity)
             cursor.close()
 
-
             add_item_response = similarity_pb2.AddItemResponse()
             add_item_response.status = 200
             add_item_response.message = f'Item added successfully: {request.description}' \
                                         f'\nSimilarity: {similarity}'
-
-
             return add_item_response
         except sqlite3.Error as e:
             error_response = similarity_pb2.AddItemResponse()
             error_response.status = 500
             error_response.message = 'Error adding item to the database: {}'.format(str(e))
-
             return error_response
 
     def SearchItems(self, request, context):
+        # Create searchItem function
         query = request.query
         print('SearchItems:')
         # SQLite
@@ -175,6 +168,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
 
 
     def GetSearchResults(self, request, context):
+        # Create GetSearchResults function
         search_id = request.search_id
         print(f'GetSearchResults, ID: {search_id}')
 
@@ -199,11 +193,7 @@ class SimilaritySearchService(similarity_pb2_grpc.SimilaritySearchServiceService
             search_result = get_search_results_response.results.add()
             search_result.id = str(result[0])
             search_result.description = result[1]
-
         return get_search_results_response
-
-
-
 
 def serve():
     port = "50051"

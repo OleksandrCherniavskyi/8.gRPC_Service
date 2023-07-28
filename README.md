@@ -19,7 +19,7 @@ The database used is PostgreSQL because it is a good scalable database.
 # To run project with Docker Desktop
 
 - Clone repository
-- ```git clone https://github.com/OleksandrCherniavskyi/Reply.io.git```
+- ```git clone https://github.com/OleksandrCherniavskyi/8.gRPC_Service.git```
 - ```docker-compose up -d```
 
 
